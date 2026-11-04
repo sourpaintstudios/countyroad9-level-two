@@ -1,0 +1,121 @@
+{
+  "_doc": "Source of truth: /workspace/CR9_Narration_Script_IKE.md (v2, Daniel's own lines). Drop small MONO takes as <slot>.ogg/.mp3, or up to 3 takes <slot>_1/_2/_3, into ../cr9_sound_pack/{ogg,mp3}/ and rebuild; empty slots play caption-only. Rules: banks pick at random with no repeats (shuffle bag); pass 3 timing (Chico + REX): WAVE lines play the instant a wave appears; COWPOP lines are the KILL taunts: they start at the kill and ride over the melt (pool kept to recorded lines <= 1.2 s where any exist), faded over 120 ms at the eye snap, which never waits for them; TRASH is picked at lock start and waits up to 6.5 s for a gap with no beam lock, then drops; MISSED/TRUCK/LAST_TRUCK lines wait up to 2.5 s for a gap, then drop; SHRED_HIT is the one line allowed mid-play. Song ducks ~6 dB under audible VO. clean: caption/slot used when the clean-language toggle is on (slot gets _Clean suffix if that file exists). ABDUCTED + LAST_TRUCK are live: Daniel approved the abduction system (3 truck lives) in DM at 6:50 PM (America/Phoenix), Oct 18 2026.",
+  "banks": {
+    "WAVE": [
+      {
+        "slot": "VO_W1",
+        "text": "Oh no. Here we go."
+      },
+      {
+        "slot": "VO_W2",
+        "text": "Oh shit, not another one.",
+        "clean": "Oh shoot, not another one."
+      },
+      {
+        "slot": "VO_W3",
+        "text": "Oh no... two of 'em?"
+      },
+      {
+        "slot": "VO_W4",
+        "text": "Oh no, not four more!"
+      },
+      {
+        "slot": "VO_W5",
+        "text": "How many do I have to DO?"
+      }
+    ],
+    "TRASH": [
+      {
+        "slot": "VO_TRASH_01",
+        "text": "Yeah, there's another one, you son of a—",
+        "clean": "Yeah, there's another one, you son of a gun!"
+      },
+      {
+        "slot": "VO_TRASH_02",
+        "text": "Come on, you want some of this?"
+      },
+      {
+        "slot": "VO_TRASH_03",
+        "text": "I'm gonna hit you with this song."
+      },
+      {
+        "slot": "VO_TRASH_04",
+        "text": "How about a little Dylan on ya?"
+      },
+      {
+        "slot": "VO_TRASH_05",
+        "text": "You want some Neil Young? ...Nah, kidding."
+      },
+      {
+        "slot": "VO_TRASH_06",
+        "text": "How 'bout an original?"
+      }
+    ],
+    "COWPOP": [
+      {
+        "slot": "VO_COWPOP_01",
+        "text": "You're a Holstein now. Take that!",
+        "only": "holstein"
+      },
+      {
+        "slot": "VO_COWPOP_02",
+        "text": "Oh shit, there's another cow.",
+        "clean": "Oh shoot, there's another cow."
+      },
+      {
+        "slot": "VO_COWPOP_03",
+        "text": "Moo, buddy. Moo."
+      }
+    ],
+    "SHRED_READY": [
+      {
+        "slot": "VO_SHRED_READY",
+        "text": "Ohhh, it's shred time."
+      }
+    ],
+    "SHRED_HIT": [
+      {
+        "slot": "VO_SHRED_HIT",
+        "text": "Da-da-da-da-da-DAAA!"
+      }
+    ],
+    "TRUCK_LIFTED": [
+      {
+        "slot": "VO_TRUCK_LIFTED",
+        "text": "Hey! Put my truck down!"
+      }
+    ],
+    "ABDUCTED": [
+      {
+        "slot": "VO_ABDUCTED",
+        "text": "OH NOOOO!"
+      }
+    ],
+    "PERFECT_RUN": [
+      {
+        "slot": "VO_PERFECT_RUN",
+        "text": "Every soul saved. Mama's gonna be proud."
+      }
+    ],
+    "MISSED_ONE": [
+      {
+        "slot": "VO_MISSED_ONE",
+        "text": "That one got away... this time."
+      }
+    ],
+    "LAST_TRUCK": [
+      {
+        "slot": "VO_LAST_TRUCK_01",
+        "text": "One more and I'm toast."
+      },
+      {
+        "slot": "VO_LAST_TRUCK_02",
+        "text": "Uh-oh. They're lookin' at me now."
+      },
+      {
+        "slot": "VO_LAST_TRUCK_03",
+        "text": "Mama, if I don't make it... feed the cows."
+      }
+    ]
+  }
+}

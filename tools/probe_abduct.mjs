@@ -1,0 +1,13 @@
+import { createRequire } from 'module'; const require = createRequire('/workspace/cr9-perftest/'); const { chromium } = require('playwright');
+import http from 'http'; import fs from 'fs'; import path from 'path';
+const root = path.resolve('dist');
+const srv = http.createServer((q, r) => { let p = decodeURIComponent(new URL(q.url, 'http://x').pathname); if (p === '/') p = '/index.html'; const f = path.join(root, p); if (!fs.existsSync(f)) { r.writeHead(404); return r.end(); } const ext = path.extname(f); r.writeHead(200, { 'Content-Type': { '.html': 'text/html', '.js': 'text/javascript', '.json': 'application/json', '.css': 'text/css', '.webp': 'image/webp', '.ogg': 'audio/ogg', '.mp3': 'audio/mpeg', '.png': 'image/png' }[ext] || 'application/octet-stream' }); fs.createReadStream(f).pipe(r); });
+await new Promise((r) => srv.listen(0, '127.0.0.1', r)); const base = `http://127.0.0.1:${srv.address().port}/`;
+const b = await chromium.launch({ args: ['--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--autoplay-policy=no-user-gesture-required'] });
+const pg = await (await b.newContext({ viewport: { width: 412, height: 915 } })).newPage(); pg.on('pageerror', (e) => console.log('pageerror', e.message));
+await pg.goto(base + '?skip=1&story=0&noboard=1&nograb=1' + (process.argv[2] || '')); await pg.waitForFunction(() => window.__cr9 && window.__cr9.S.ready, null, { timeout: 90000 });
+await pg.mouse.click(200, 400); await pg.dispatchEvent('#titleCard', 'pointerup'); await pg.waitForFunction(() => window.__cr9.S.state === 'run' && window.__cr9.S.fight, null, { timeout: 60000 });
+const r = await pg.evaluate(async () => { const { p2 } = window.__cr9; const ft = []; let last = performance.now(), on = true; const f = () => { const n = performance.now(); ft.push(Math.round(n - last)); last = n; if (on) requestAnimationFrame(f); }; requestAnimationFrame(f);
+  await new Promise((r) => setTimeout(r, 1500)); const pre = ft.length; const t0 = performance.now(); p2.abducted(); const lag = []; for (let i = 0; i < 6; i++) { const a = performance.now(); await new Promise((r) => setTimeout(r, 200)); lag.push(Math.round(performance.now() - a - 200)); } on = false;
+  return { before: ft.slice(0, pre).slice(-15), after: ft.slice(pre), lag, open: window.__cr9.S.missOpenAt }; });
+console.log(JSON.stringify(r)); await b.close(); srv.close();

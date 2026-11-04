@@ -1,0 +1,46 @@
+{
+ "art": {
+  "bg_desert.webp": "bg_desert.bc4f732a.webp",
+  "bg_ground.webp": "bg_ground.e04b9397.webp",
+  "bg_land.webp": "bg_land.6176ec5c.webp",
+  "bg_mesa.webp": "bg_mesa.cac71de3.webp",
+  "bg_sky.webp": "bg_sky.2b6d2217.webp",
+  "brush.webp": "brush.7e14547f.webp",
+  "corn.webp": "corn.10522bde.webp",
+  "cows_sdf.png": "cows_sdf.e9c3be31.png",
+  "cows_sheet.webp": "cows_sheet.127f4d4d.webp",
+  "dash.webp": "dash.de277ed5.webp",
+  "dlr_painting.webp": "dlr_painting.8dae492e.webp",
+  "fx.webp": "fx.7eb6ba4c.webp",
+  "gray_atlas.etc2.bin": "gray_atlas.etc2.dc69ccbc.bin",
+  "gray_atlas.webp": "gray_atlas.82aef950.webp",
+  "hero.etc2.bin": "hero.etc2.b460f88c.bin",
+  "hero.webp": "hero.b97a47f6.webp",
+  "hero_flinch.etc2.bin": "hero_flinch.etc2.4fd42acc.bin",
+  "hero_flinch.webp": "hero_flinch.3906e09f.webp",
+  "hero_headbang.etc2.bin": "hero_headbang.etc2.aee13024.bin",
+  "hero_headbang.webp": "hero_headbang.14c25cf9.webp",
+  "hero_overhead.etc2.bin": "hero_overhead.etc2.b673de0a.bin",
+  "hero_overhead.webp": "hero_overhead.4560e07d.webp",
+  "mn_props.webp": "mn_props.cfa7d8be.webp",
+  "moon.webp": "moon.fb37dec7.webp",
+  "saguaro.webp": "saguaro.f7a9e2f8.webp",
+  "saucer.webp": "saucer.4acc54f8.webp",
+  "sign.webp": "sign.c6aabd8e.webp",
+  "story.webp": "story.60dd0d18.webp"
+ },
+ "audio": {
+  "ogg": {
+   "bin": "pack_ogg.c40c2997.bin",
+   "json": "pack_ogg.3c10c43c.json",
+   "music": "ogg/MUSIC_Full.a41812c6.ogg",
+   "stem": "ogg/GTR_Stem.c5786e0e.ogg"
+  },
+  "mp3": {
+   "bin": "pack_mp3.0ff36f81.bin",
+   "json": "pack_mp3.3d3ce8e0.json",
+   "music": "mp3/MUSIC_Full.572e3f11.mp3",
+   "stem": "mp3/GTR_Stem.901efa45.mp3"
+  }
+ }
+}

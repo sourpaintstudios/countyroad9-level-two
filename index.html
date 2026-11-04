@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover" />
+<meta name="theme-color" content="#05060d" />
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+<meta http-equiv="Pragma" content="no-cache" />
+<meta http-equiv="Expires" content="0" />
+<title>County Road 9 · Missing Time v4.8.0</title>
+<script>/* v4.5.2 desktop letterbox: the game is a tall phone layout (vw/vh units everywhere), so a wide window gets it in a centred phone-shaped frame (desktop.html). ?embed=1 / ?wide=1 opt out */
+(function () { try { var q = location.search; if (window.top === window.self && !/[?&](embed|wide)=1/.test(q) && innerWidth / innerHeight > 0.8) location.replace('/desktop.html' + q); } catch (e) {} })();</script>
+<style id="crit">html,body{margin:0;background:#05060d;color:#cfd3e0}body>*{visibility:hidden}body:not(.ready)::before{content:"COUNTY ROAD 9";visibility:visible;position:fixed;inset:0;display:flex;align-items:center;justify-content:center;font:700 20px/1 system-ui,sans-serif;letter-spacing:.2em;color:#8a90a8}body.ready>*{visibility:visible}</style>
+<script>addEventListener('load',function(){document.body.classList.add('ready')})</script>
+<link rel="icon" href="data:," />
+</head>
+<body>
+<canvas id="gl"></canvas>
+<div id="beat"></div>
+<div id="hud" class="hidden"><span id="title9">CR<b>9</b></span><div id="shredBar"><span>SHRED</span><i id="shredFill"></i></div><span id="lives"></span><span id="souls"><canvas id="soulsIco"></canvas><b id="soulsN">0</b></span></div>
+<div id="scoreHud" class="hidden"><small>SCORE</small><b id="scoreN">0</b></div>
+<div id="ptsPop"></div>
+<div id="holdHere" class="hidden"><b>HOLD HERE</b><i>&#9660;</i></div>
+<div id="grabBar" class="hidden"><span>BREAK FREE</span><i id="grabFill"></i></div>
+
+<button id="shredBtn" class="hidden" aria-label="SHRED, hyper mode">SHRED!</button>
+<div id="vo" class="hidden"></div>
+<div id="cmd" class="hidden"></div>
+<div id="sub" class="hidden"></div>
+<div id="pop"></div>
+<div id="meter" class="hidden duel"><i id="meterFill"></i><span id="meterTxt"></span></div>
+<div id="pad"></div>
+<div id="padLine" class="hidden"></div>
+<div id="reticle" class="hidden"><i></i></div>
+<div id="lockRing" class="hidden"></div>
+<b id="lockNum" class="hidden"></b>
+<div id="cowQ" class="hidden">❓</div>
+<div id="intro" class="hidden"><div id="introWord"></div><div id="hand">👆</div></div>
+<div id="bubble" class="hidden"></div>
+<div id="rank" class="hidden"><div class="lbl">YOUR RANK</div><div id="rankTitle"></div><div id="rankScore"></div><div id="newBest" class="hidden">NEW HIGH SCORE!</div></div>
+<div id="saved" class="hidden"><div class="big">ANOTHER SOUL SAVED!</div><div id="winLine"></div></div>
+<div id="titleCard" class="screen">
+  <div class="studio">SOUR PAINT STUDIOS · COUNTY ROAD 9 · 1993</div>
+  <h1>MISSING<br><span class="nine">TIME</span></h1>
+  <div class="tag">MUSIC SAVES ALIENS</div>
+  <div class="sub2">aim · hold · beam them home</div>
+  <div id="startText">Loading… <span id="loadPct">0</span>%</div>
+  <button id="resumeBtn" class="hidden" aria-label="Resume your saved run">RESUME RUN<small id="resumeSub"></small></button>
+  <button id="newBtn" class="hidden" aria-label="Start a new game and discard the saved run">NEW GAME</button>
+  <div class="small">Sound on. Touch anywhere to fire your guitar beam, slide to aim.</div>
+  <button id="hiBtn" aria-label="High scores">HIGH SCORES</button>
+  <button id="cleanBtn" aria-label="Clean words toggle">CLEAN WORDS: OFF</button>
+  <a id="howBtn" href="/how-to-play" target="_top" aria-label="How to play">HOW TO PLAY</a>
+</div>
+<div id="story" class="screen hidden">
+  <canvas id="storyArt"></canvas>
+  <div class="legend">Twenty-five years of cow experiments. Zero souls. Then they heard Daniel play.</div>
+  <div class="storyTxt">The grays have no souls. That's why they watch us. Daniel's guitar melts them into paint… and paint becomes a cow with a soul. Save 'em all.</div>
+  <div class="tapGo">TAP TO DRIVE</div>
+</div>
+<div id="nameScreen" class="screen hidden">
+  <div class="arcHd">YOU SAW 'EM.</div>
+  <div class="arcSub">LEAVE YOUR NAME, WITNESS</div>
+  <div id="nameScore"></div>
+  <input id="nameIn" type="text" inputmode="text" autocomplete="off" autocorrect="off" autocapitalize="characters" spellcheck="false" maxlength="10" placeholder="__________" />
+  <div class="arcHint">A–Z · 0–9 · space · up to 10</div>
+  <div id="nameMsg"></div>
+  <button id="nameGo" aria-label="Submit your name">SUBMIT</button>
+  <button id="nameSkip" aria-label="Skip signing the sheet">skip <span id="nameCount">30</span></button>
+</div>
+<div id="boardScreen" class="screen hidden"><div id="titleBoard"></div><button id="boardClose" aria-label="Back">BACK</button></div>
+<div id="endCard" class="screen hidden">
+  <h2 id="endTitle">0 souls saved<br>on County Road 9</h2>
+  <div id="endRank"></div>
+  <canvas id="missGray" class="hidden" width="320" height="320"></canvas>
+  <div id="endMiss" class="hidden"></div>
+  <div id="missCows" class="hidden"><canvas id="missCowA"></canvas><canvas id="missCowB"></canvas></div>
+  <div id="endSing" class="hidden">Somewhere up there, the grays are singing County Road 9. Badly.</div>
+  <div id="endTally" class="hidden"></div>
+  <button id="again" aria-label="Play again">PLAY AGAIN</button>
+  <button id="signBtn" class="hidden" aria-label="Sign the witness sheet">SIGN THE WITNESS SHEET</button>
+  <div id="endStats"></div>
+  <div id="endPerfect" class="hidden"></div>
+  <div id="endFps"></div>
+  <div id="endRival" class="hidden"></div>
+  <div id="endBoard"></div>
+</div>
+<div id="flash"></div>
+<button id="pauseBtn" class="hidden" aria-label="Pause"><i></i><i></i></button>
+<div id="pauseMenu" class="hidden" role="dialog" aria-modal="true" aria-labelledby="pmTitle"><div class="pmPanel"><s class="sp a"></s><s class="sp b"></s><s class="sp c"></s><h2 id="pmTitle">PAUSED</h2><p id="pmNote" class="hidden">Run restored. Tap RESUME to keep going.</p><button id="pmResume" aria-label="Resume the run">RESUME</button><button id="pmRestart" aria-label="Restart the run">RESTART</button><button id="pmMenu" aria-label="Back to the main menu">MAIN MENU</button></div><div id="pmCount" aria-live="polite"></div></div>
+<button id="updBtn" class="hidden" aria-label="New version available, update now">NEW VERSION · TAP TO UPDATE</button>
+<div id="fps" class="hidden"></div>
+<script type="module" src="/src/main.js"></script>
+</body>
+</html>

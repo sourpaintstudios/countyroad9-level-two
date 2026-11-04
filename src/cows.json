@@ -1,0 +1,25 @@
+{
+ "_doc": "v4.5 cow art config (drop-in by FILENAME). Files live in vendor/cr9_cows. `npm run build` runs tools/make_cow_sheet.py first and rebuilds the ONE cow sheet. Regular kills = cow_hybrid3_<type> (black alien eyes, no blink/eye swap). HYPER kills = bald gray cow_shred_<name>(_spotted) per shredKills.",
+ "src": "vendor/cr9_cows",
+ "types": [
+  "holstein",
+  "highland",
+  "longhorn",
+  "golden"
+ ],
+ "hybrid": "cow_hybrid3_{type}.png",
+ "shred": "cow_shred_{shred}.png",
+ "shredSpotted": "cow_shred_{shred}_spotted.png",
+ "shredName": {
+  "holstein": "holstein",
+  "highland": "highland",
+  "longhorn": "longhorn",
+  "golden": "grinner"
+ },
+ "rare": "golden",
+ "rareChance": 0.08,
+ "shredKills": "bald",
+ "_shredKills": "FLAG: 'bald' = kills during HYPER MODE make bald gray cows (golden stays a rare random drop). 'golden' = HYPER kills make the golden cow instead.",
+ "sleepy": "cow_hybrid3_{type}_sleepy.png",
+ "_sleepy": "pass-2 hook: if IKE's sleepy-eyed frame exists it is packed on the same sheet; the cow forms sleepy, holds 0.4 s, then SNAPS to the black-eyed hybrid3 frame with a small scale pop. Missing file = current behaviour."
+}

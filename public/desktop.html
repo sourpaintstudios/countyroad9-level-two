@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+<meta name="theme-color" content="#05060d" />
+<title>County Road 9 · Missing Time v4.8.0</title>
+<link rel="icon" href="data:," />
+<style>
+html, body { margin: 0; height: 100%; overflow: hidden; background: radial-gradient(ellipse at 50% 40%, #1a1238, #05060d 70%); color: #a99ad8; font: 600 14px/1.5 system-ui, sans-serif; }
+#wrap { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; }
+iframe { height: 100vh; width: min(100vw, calc(100vh * 9 / 19.5)); border: 0; display: block; box-shadow: 0 0 40px #b6ff2e33, 0 0 0 1px #2a2450; background: #05060d; }
+#side { position: fixed; left: 50%; bottom: 18px; margin-left: calc(min(100vw, 100vh * 9 / 19.5) / 2 + 24px); max-width: 230px; }
+#side b { color: #b6ff2e; } #side a { color: #7fd8ff; } kbd { font: 800 12px ui-monospace, monospace; border: 1px solid #c9b8ff; border-bottom-width: 2px; border-radius: 4px; padding: 0 5px; color: #fff; }
+@media (max-aspect-ratio: 13/10) { #side { display: none; } }
+</style>
+</head>
+<body>
+<div id="wrap"><iframe id="game" title="County Road 9" allow="autoplay; fullscreen" tabindex="0"></iframe></div>
+<div id="side"><b>KEYS</b><br><kbd>← ↑ → ↓</kbd> or <kbd>W A S D</kbd> aim<br><kbd>Space</kbd> hold to beam · tap to break free<br><kbd>X</kbd> SHRED · <kbd>Esc</kbd> / <kbd>P</kbd> pause<br><kbd>Enter</kbd> start / play again<br><br><a href="/how-to-play">HOW TO PLAY</a></div>
+<script>
+// v4.8.0 (was v4.5.2): wide windows play the phone layout in a centred frame; keys go to the game (the frame is focused on load and on any click)
+var q = location.search ? location.search + '&embed=1' : '?embed=1', f = document.getElementById('game');
+f.src = '/' + q; var focus = function () { try { f.focus(); f.contentWindow.focus(); } catch (e) {} };
+f.addEventListener('load', focus); addEventListener('pointerdown', function (e) { if (e.target === document.documentElement || e.target.id === 'wrap') focus(); });
+addEventListener('keydown', function (e) { if (/^Arrow| |^[wasdWASD]$/.test(e.key)) e.preventDefault(); focus(); });
+</script>
+</body>
+</html>
