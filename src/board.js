@@ -34,3 +34,16 @@ export function rivalLine(res, score) { // Chico: compare against the entry just
   if (a) return `${(a.score - score).toLocaleString()} pts behind ${esc(a.name)}`;
   return 'First witness on the sheet!';
 }
+
+// v4.9 name-entry board: the live sheet with a pending row (the player's name, typed live) sitting at the rank the score would earn. rows: current top list or null (offline)
+export function entryRank(rows, score) { let r = 1; for (const e of rows || []) if (e.score >= score) r++; return r; }
+export function renderEntryBoard(el, rows, score, souls, rankFor) {
+  const rk = entryRank(rows, score); const list = rows ? rows.slice() : [];
+  let h = `<div class="sheet compact"><i class="pin"></i><div class="sheetHd">WITNESSES OF COUNTY ROAD 9</div><ol class="wit" id="witList">`;
+  list.forEach((e, i) => { if (i + 1 === rk) h += pendingRow(rk, score); h += `<li data-id="${esc(e.id)}"><b class="rk">${i + 1}.</b><span class="nm">${esc(e.name)}${e.abducted ? SAUCER : ''}</span><span class="sc">${e.score.toLocaleString()}</span></li>`; });
+  if (rk > list.length) h += pendingRow(rk > 10 ? '—' : rk, score);
+  h += `<li class="gray">${STINK}<span class="nm">GRAY</span><span class="sc">0</span></li></ol></div>`;
+  el.innerHTML = h; return rk;
+}
+function pendingRow(rk, score) { return `<li class="me pend" id="pendRow"><b class="rk">${rk}.</b><span class="nm"><span id="pendName"></span><i class="cur"></i></span><span class="sc">${score.toLocaleString()}</span></li>`; }
+export const rowHtml = (e, i) => `<li data-id="${esc(e.id)}"><b class="rk">${i + 1}.</b><span class="nm">${esc(e.name)}${e.abducted ? SAUCER : ''}</span><span class="sc">${e.score.toLocaleString()}</span></li>`;

@@ -135,17 +135,41 @@ body.hyperOn #cmd { color: #fff35a; }
 #story .storyTxt { font: 800 21px/1.35 system-ui, sans-serif; color: #fff; text-shadow: 0 2px 0 #2a0a5a; }
 #story .tapGo { margin-top: 2vh; font-size: 22px; color: var(--neon); animation: askText .6s infinite alternate; }
 /* ---------- v4.4 arcade name entry ---------- */
-#nameScreen { background: #05060df2; justify-content: center; gap: 1.6vh; font-family: "Courier New", ui-monospace, monospace; }
-#nameScreen .arcHd { font: italic 900 13vw/1 "Arial Black", Impact, sans-serif; color: #fff35a; text-shadow: 0 0 18px #ff9a2e, 0 5px 0 #6a1a00; }
-#nameScreen .arcSub { font: 900 5.2vw "Courier New", monospace; letter-spacing: .12em; color: var(--neon); text-shadow: 0 0 10px #6f0; animation: askText .5s infinite alternate; }
-#nameScore { font: 900 5vw "Courier New", monospace; color: #ffd27a; }
-#nameIn { width: 90vw; font: 900 10.5vw "Courier New", monospace; letter-spacing: .14em; text-align: center; text-transform: uppercase; color: #fff; background: #000; border: 4px solid var(--neon); border-radius: 10px; padding: 10px 4px; caret-color: #ff4fd8;
-  box-shadow: 0 0 20px #6f0a, inset 0 0 14px #6f04; outline: none; user-select: text; -webkit-user-select: text; touch-action: manipulation; }
-#nameIn::placeholder { color: #3a5a2a; }
-.arcHint { font: 700 13px system-ui, sans-serif; color: #9a93b8; }
-#nameMsg { min-height: 20px; font: 800 16px system-ui, sans-serif; color: #ff9ad8; }
-#nameGo { font: 900 34px "Arial Black", sans-serif; width: 80vw; padding: 18px 10px; border-radius: 60px; border: 5px solid var(--neon); background: #2a5a00; color: #fff; box-shadow: 0 0 30px #8f0a; touch-action: manipulation; }
-#nameSkip { font: 700 16px system-ui, sans-serif; background: none; border: 0; color: #9a93b8; text-decoration: underline; padding: 10px; touch-action: manipulation; }
+#nameScreen { background: #05060df5; justify-content: flex-start; gap: 6px; padding: max(8px, env(safe-area-inset-top)) 8px max(8px, env(safe-area-inset-bottom)); font-family: "Courier New", ui-monospace, monospace; }
+#nameScreen .nameTop { flex: none; display: flex; flex-wrap: wrap; align-items: baseline; justify-content: center; gap: 0 12px; }
+#nameScreen .arcHd { font: italic 900 min(9vw, 40px)/1.1 "Arial Black", Impact, sans-serif; color: #fff35a; text-shadow: 0 0 14px #ff9a2e, 0 3px 0 #6a1a00; }
+#nameScreen .arcSub { flex-basis: 100%; font: 900 min(3.6vw, 15px) "Courier New", monospace; letter-spacing: .12em; color: var(--neon); text-shadow: 0 0 10px #6f0; animation: askText .5s infinite alternate; }
+#nameScore { font: 900 min(4vw, 16px) "Courier New", monospace; color: #ffd27a; }
+#nameBoard { flex: 1 1 auto; min-height: 0; width: 100%; max-width: 460px; overflow-y: auto; overscroll-behavior: contain; padding: 10px 0 8px; touch-action: pan-y; }
+#nameBoard .sheet { max-width: 440px; }
+.sheet.compact { padding: 16px 12px 8px 28px; transform: rotate(-.5deg);
+  background-image: linear-gradient(90deg, transparent 22px, #e88 22px 24px, transparent 24px), repeating-linear-gradient(#fbf6e4 0 27px, #9fc1e4 27px 28px); }
+.sheet.compact .sheetHd { font-size: 15px; margin-bottom: 6px; }
+.sheet.compact .wit li { display: grid; grid-template-columns: 26px 1fr auto; grid-template-rows: none; height: 28px; min-height: 28px; padding: 0; align-items: center; overflow: visible; }
+.sheet.compact .wit .nm { font-size: 19px; white-space: nowrap; }
+.sheet.compact .wit .rk { font-size: 13px; }
+.sheet.compact .wit .sc { font-size: 14px; }
+.sheet.compact .wit li.gray .stink { width: 18px; height: 18px; }
+.sheet.compact .wit li.gray { margin-top: 0; }
+.wit li.pend .nm { min-height: 22px; }
+.wit .cur { display: inline-block; width: 3px; height: 20px; margin-left: 2px; vertical-align: middle; background: #ff4fd8; animation: curB .45s steps(1) infinite; }
+@keyframes curB { 50% { opacity: 0; } }
+#pendName.typed { display: inline-block; animation: typedP .28s ease-out; }
+@keyframes typedP { 0% { transform: scale(1.18); color: #ff4fd8; text-shadow: 0 0 8px #ff4fd8; } 100% { transform: scale(1); } }
+.wit li.newrow { overflow: hidden; }
+#nameMsg { flex: none; min-height: 18px; font: 800 15px system-ui, sans-serif; color: #ff9ad8; }
+#keypad { flex: none; width: 100%; max-width: 480px; transition: transform .35s, opacity .35s; user-select: none; -webkit-user-select: none; }
+#keypad.away { display: none; }
+#keypad .kr { display: flex; gap: 4px; margin-bottom: 4px; justify-content: center; }
+#keypad .k { flex: 1 1 0; min-width: 0; max-width: 48px; height: clamp(36px, 5.6vh, 48px); font: 900 18px "Courier New", monospace; border-radius: 7px; border: 2px solid #4a7a20; background: #12220a; color: #dfffa0; padding: 0; touch-action: manipulation; }
+#keypad .k:active { background: #2a5a00; }
+#keypad .k.wide { flex: 1.7; max-width: 80px; }
+#keypad .k.space { flex: 3; max-width: none; font-size: 14px; }
+#keypad .k.go { flex: 2; max-width: none; font: 900 22px "Arial Black", sans-serif; background: #2a5a00; border-color: var(--neon); color: #fff; box-shadow: 0 0 16px #8f08; }
+#nameSkip { flex: none; font: 700 15px system-ui, sans-serif; background: none; border: 0; color: #9a93b8; text-decoration: underline; padding: 6px; touch-action: manipulation; }
+#alienFx { position: fixed; left: 0; top: 0; width: 84px; height: 52px; z-index: 30; pointer-events: none; will-change: transform; filter: drop-shadow(0 4px 8px #000a); }
+#beamFx { position: fixed; width: 36px; z-index: 29; pointer-events: none; opacity: 0; background: linear-gradient(#b6ff2eaa, #b6ff2e22); clip-path: polygon(30% 0, 70% 0, 100% 100%, 0 100%); }
+@media (prefers-reduced-motion: reduce) { #nameScreen .arcSub, .wit .cur { animation: none; } }
 /* ---------- v4.4 WITNESSES OF COUNTY ROAD 9 (IKE): a sign-in sheet pinned on a truck-stop diner wall ---------- */
 #endCard { overflow-y: auto; touch-action: pan-y; justify-content: flex-start; padding-top: 6vh; padding-bottom: 30px; }
 #endRival { font: italic 900 6vw/1.2 "Arial Black", sans-serif; color: #fff35a; text-shadow: 0 0 12px #ff9a2e, 0 3px 0 #3a0a6a; margin: 6px 0 4px; }

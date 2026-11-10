@@ -70,7 +70,7 @@ const ready = (pg) => pg.waitForFunction(() => window.__cr9 && window.__cr9.S.re
   await pg.evaluate(() => { const { S } = window.__cr9; S.state = 'end'; S.missSkippable = false; document.getElementById('endCard').classList.remove('hidden'); S.runs0 = S.runT0; });
   await pg.keyboard.press('Enter'); await pg.waitForTimeout(300); ok('Enter on end card = PLAY AGAIN', await pg.evaluate(() => window.__cr9.S.state === 'run' && window.__cr9.S.runT0 !== window.__cr9.S.runs0));
   await pg.evaluate(() => { const { S } = window.__cr9; S.state = 'name'; document.getElementById('nameScreen').classList.remove('hidden'); document.getElementById('endCard').classList.remove('hidden'); S.runs0 = S.runT0; });
-  await pg.focus('#nameIn'); await pg.keyboard.type('TESTKB'); await pg.keyboard.press('Enter'); await pg.waitForTimeout(300);
+  await pg.keyboard.type('TESTKB'); await pg.keyboard.press('Enter'); await pg.waitForTimeout(300);
   ok('Enter in name box does not restart', await pg.evaluate(() => window.__cr9.S.runT0 === window.__cr9.S.runs0)); await ctx.close(); }
 { // title card HOW TO PLAY link + the page
   const ctx = await b.newContext({ viewport: { width: 412, height: 915 }, isMobile: true, hasTouch: true }); const pg = await ctx.newPage(); await pg.goto(base); await ready(pg);

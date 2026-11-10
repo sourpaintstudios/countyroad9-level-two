@@ -8,7 +8,7 @@ import { AT, buildAtmos, swayMat, updateAtmos } from './atmos.js';
 import BEATS from './beats.json';
 import COWS from './cows_meta.json';
 import VO from './vo.json'; // v4.5 IKE's CB narration slots + captions
-import { fetchBoard, postScore, renderBoard, rivalLine, cleanName, validName, NAME_MAX, scoreOf, round2, canPost, SCORE, multOf } from './board.js';
+import { fetchBoard, postScore, renderBoard, renderEntryBoard, rowHtml, rivalLine, cleanName, validName, NAME_MAX, scoreOf, round2, canPost, SCORE, multOf } from './board.js';
 import { L2, initL2, cutscene, enterShip, endCard, fleeSfx, leaveShip } from './l2.js';
 import PKG from '../package.json'; // v4.5.2: the build version baked into the bundle (version.json is written from the same file)
 import MAN from './manifest.json'; // v4.5: the ONE cow sheet (built by tools/make_cow_sheet.py from src/cows.json)
@@ -74,7 +74,7 @@ async function versionCheck() { if (verBusy || Q.get('nover')) return; verBusy =
   try { const r = await fetch(`${import.meta.env.BASE_URL}version.json?t=${Date.now()}`, { cache: 'no-store' }); if (r.ok) { const j = await r.json(); if (j && j.v && j.v !== BUILD_V) { console.warn('stale build', BUILD_V, '->', j.v); STALE = j.v; } } } catch (e) {} finally { verBusy = false; } }
 versionCheck(); document.addEventListener('visibilitychange', () => { if (!document.hidden) versionCheck(); }); window.addEventListener('pageshow', (e) => { if (e.persisted) versionCheck(); });
 const S = { state: 'boot', steer: 0, steerT: 0, souls: 0, bi: 0, laughs: 0, hold: false, finger: null, aimW: [0, 300], par: 0 };
-window.__cr9 = { S, A, Song, G, BT };
+window.__cr9 = { S, A, Song, G, BT, showNameEntry };
 
 // ---------- scene ----------
 const renderer = initRenderer($('gl'), Q.get('q'));
@@ -1060,22 +1060,74 @@ function makeBillboard() { // hook: a roadside billboard prop that passes once i
 // ---------- v4.4 name entry (big arcade screen after the rank card) + the WITNESSES board ----------
 const runDur = () => (NOW() - S.runT0) / 1000;
 function localBest() { return +(localStorage.getItem('cr9_best_v42') || 0); }
+const KEYROWS = ['1234567890', 'QWERTYUIOP', 'ASDFGHJKL', 'ZXCVBNM'];
+function buildKeypad() { // v4.9: an in-game keypad, so the phone's own keyboard never covers the sign-in sheet
+  const kp = $('keypad'); if (kp.dataset.built) return; kp.dataset.built = '1'; let h = '';
+  KEYROWS.forEach((r, i) => { h += '<div class="kr">'; for (const c of r) h += `<button class="k" data-k="${c}" aria-label="${c}">${c}</button>`; if (i === 3) h += '<button class="k wide" data-k="DEL" aria-label="Delete">⌫</button>'; h += '</div>'; });
+  h += '<div class="kr"><button class="k space" data-k=" " aria-label="Space">SPACE</button><button class="k go" id="nameGo" data-k="GO" aria-label="Submit your name">SUBMIT</button></div>';
+  kp.innerHTML = h; kp.addEventListener('pointerdown', (e) => { const b = e.target.closest('.k'); if (!b) return; e.stopPropagation(); e.preventDefault(); nameKey(b.dataset.k); });
+}
+function nameKey(k) {
+  if (S.state !== 'name' || S.posting) return; if (k === 'GO') return nameSubmit();
+  if (k === 'DEL') S.nameBuf = S.nameBuf.slice(0, -1); else if (S.nameBuf.length < NAME_MAX && !(k === ' ' && !S.nameBuf)) S.nameBuf = cleanName(S.nameBuf + k).slice(0, NAME_MAX);
+  $('nameMsg').textContent = ''; drawPend(true);
+}
+function drawPend(flash) { const p = $('pendName'); if (!p) return; p.textContent = S.nameBuf; if (flash) { p.classList.remove('typed'); void p.offsetWidth; p.classList.add('typed'); } }
+function paintEntry() { renderEntryBoard($('nameBoard'), S.nameRows, S.score, S.souls, rankFor); drawPend(false); const r = $('pendRow'); if (r && r.scrollIntoView) r.scrollIntoView({ block: 'nearest' }); }
 function showNameEntry() {
-  S.state = 'name'; hide('rank'); const inp = $('nameIn'); inp.value = localStorage.getItem('cr9_name') || ''; inp.maxLength = NAME_MAX; $('nameMsg').textContent = ''; $('nameScore').textContent = `${S.score.toLocaleString()} pts · ${S.souls} soul${S.souls === 1 ? '' : 's'}`;
-  show('nameScreen'); S.nameT0 = NOW(); nameTick(); clearInterval(S.nameIv); S.nameIv = setInterval(nameTick, 250); setTimeout(() => { try { inp.focus({ preventScroll: true }); } catch (e) {} }, 60);
+  S.state = 'name'; hide('rank'); S.posting = false; S.nameBuf = cleanName(localStorage.getItem('cr9_name') || '').trim().slice(0, NAME_MAX); S.nameRows = null; $('nameMsg').textContent = ''; $('nameScore').textContent = `${S.score.toLocaleString()} pts · ${S.souls} soul${S.souls === 1 ? '' : 's'}`;
+  buildKeypad(); $('keypad').classList.remove('away'); S.nameFetch = (S.nameFetch || 0) + 1; const my = S.nameFetch; $('nameBoard').innerHTML = '<div class="sheet loading">Reading the sign-in sheet…</div>';
+  show('nameScreen'); S.nameT0 = NOW(); nameTick(); clearInterval(S.nameIv); S.nameIv = setInterval(nameTick, 250);
+  fetchBoard(5000).then((d) => { if (my !== S.nameFetch || S.state !== 'name' || S.posting) return; S.nameRows = d ? d.top || [] : null; paintEntry(); });
 }
 function nameTick() { const left = Math.max(0, 30 - Math.floor((NOW() - S.nameT0) / 1000)); $('nameCount').textContent = left; if (left <= 0 && S.state === 'name' && !S.posting) nameSkip(); }
-function nameSkip() { clearInterval(S.nameIv); hide('nameScreen'); try { $('nameIn').blur(); } catch (e) {} S.nameDone = true; showEnd(); }
+function nameSkip() { clearInterval(S.nameIv); S.nameFetch++; hide('nameScreen'); S.nameDone = true; showEnd(); }
+const wait = (ms) => new Promise((r) => setTimeout(r, ms));
+const ALIEN_UFO = '<svg viewBox="0 0 84 52" width="84" height="52"><path d="M26 22a16 17 0 0 1 32 0z" fill="#9fe8ff" stroke="#2a2a33" stroke-width="2"/><ellipse cx="42" cy="16" rx="8" ry="9" fill="#a7acb5" stroke="#2a2a33" stroke-width="1.5"/><path d="M35 14q3-2 5 1q-3 2-5-1zM44 15q2-3 5-1q-2 3-5 1z" fill="#111"/><ellipse cx="42" cy="30" rx="40" ry="11" fill="#9aa4b0" stroke="#2a2a33" stroke-width="2"/><circle cx="16" cy="32" r="3" fill="#b6ff2e"/><circle cx="42" cy="38" r="3" fill="#ff4fd8"/><circle cx="68" cy="32" r="3" fill="#b6ff2e"/></svg>';
+function stingNow() { S.boardSting = true; try { if (A.buf[SND.boardSting]) play(SND.boardSting, { gain: 0.8 }); else { killChord(); play('ANIMAL_Cow_Moo_01', { gain: 0.8 }); } } catch (e) {} }
+// v4.9: the alien drop-in. The saucer flies to the rank slot, the name drops in and the rows below shift down; then the saucer kicks the old last entry off the sheet.
+async function dropAnim(res, name) {
+  const list = $('witList'), nb = $('nameBoard'); const gray = list && list.querySelector('li.gray');
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (!list || !gray) { stingNow(); await wait(500); return; }
+  const meId = res.id, final = res.top || [], others = final.filter((e) => e.id !== meId); const old = S.nameRows || [];
+  const kicked = old.filter((e) => !final.some((t) => t.id === e.id)).slice(0, 1), idx = Math.min(res.rank - 1, others.length);
+  const grayHtml = gray.outerHTML, meHtml = (cls) => rowHtml({ id: meId, name, score: S.score, abducted: !!S.abducted }, idx).replace('<li ', `<li class="me ${cls}" `);
+  if (reduce) { list.innerHTML = final.map((e, i) => (e.id === meId ? rowHtml(e, i).replace('<li ', '<li class="me" ') : rowHtml(e, i))).join('') + grayHtml; stingNow(); await wait(900); return; }
+  const pre = others.concat(kicked); list.innerHTML = pre.map(rowHtml).join('') + grayHtml; // the sheet as it was before: everyone else, the soon-to-be-kicked entry last
+  const rows = () => Array.from(list.children), renum = () => { let n = 1; rows().forEach((r) => { if (!r.classList.contains('gray')) r.querySelector('.rk').textContent = n++ + '.'; }); }; const slot = rows()[idx]; if (slot && slot.scrollIntoView) slot.scrollIntoView({ block: 'center' });
+  const fx = document.createElement('div'); fx.id = 'alienFx'; fx.innerHTML = ALIEN_UFO; const beam = document.createElement('div'); beam.id = 'beamFx'; $('nameScreen').append(beam, fx);
+  const W = innerWidth, at = (el) => el.getBoundingClientRect(), cx = at(nb).left + at(nb).width * 0.62;
+  const to = (row, dx) => { const r = at(row); return [Math.min(Math.max(cx + (dx || 0) - 42, 4), W - 88), Math.max(r.top - 46, 2)]; };
+  const fly = (x, y, ms, ease) => fx.animate([{ transform: fx.dataset.t || `translate(${W}px, ${y}px)` }, { transform: `translate(${x}px, ${y}px)` }], { duration: ms, easing: ease || 'ease-in-out', fill: 'forwards' }).finished.then(() => { fx.dataset.t = `translate(${x}px, ${y}px)`; });
+  let [x, y] = to(slot || gray); await fly(x, y, 560, 'ease-out');
+  const sr = at(slot || gray); Object.assign(beam.style, { left: x + 24 + 'px', top: y + 40 + 'px', height: Math.max(sr.top - (y + 40) + 4, 6) + 'px' }); beam.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 160, fill: 'forwards' });
+  const t = document.createElement('div'); t.innerHTML = meHtml('newrow'); const li = t.firstElementChild; li.style.height = '0px'; li.style.minHeight = '0px'; list.insertBefore(li, slot || gray); const nm = li.querySelector('.nm'); renum();
+  stingNow(); vib(30); const H = 28;
+  li.animate([{ height: '0px' }, { height: H + 'px' }], { duration: 380, easing: 'ease-out', fill: 'forwards' }); li.style.height = H + 'px'; li.style.minHeight = H + 'px';
+  nm.animate([{ transform: 'translateY(-90px) rotate(-8deg)', opacity: 0 }, { transform: 'translateY(4px) rotate(-2deg)', opacity: 1, offset: .7 }, { transform: 'translateY(0) rotate(-2deg)', opacity: 1 }], { duration: 480, easing: 'cubic-bezier(.3,1.4,.5,1)' });
+  await wait(620); beam.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 160, fill: 'forwards' });
+  if (kicked.length) {
+    const victim = rows()[rows().length - 2]; if (victim && victim.dataset.id === kicked[0].id) {
+      if (victim.scrollIntoView) victim.scrollIntoView({ block: 'nearest' }); [x, y] = to(victim, -50); await fly(x, y, 420);
+      fx.animate([{ filter: 'none' }, { filter: 'drop-shadow(0 0 14px #fff35a) brightness(1.6)' }, { filter: 'none' }], { duration: 240 }); vib([20, 30, 40]);
+      await victim.animate([{ transform: 'translateX(0) rotate(0)', opacity: 1 }, { transform: 'translateX(120%) rotate(16deg)', opacity: 0 }], { duration: 520, easing: 'ease-in', fill: 'forwards' }).finished;
+      victim.style.overflow = 'hidden'; await victim.animate([{ height: H + 'px' }, { height: '0px' }], { duration: 220, fill: 'forwards' }).finished; victim.remove(); renum();
+    }
+  }
+  await fx.animate([{ transform: fx.dataset.t || 'none' }, { transform: `translate(${W + 40}px, -60px)` }], { duration: 420, easing: 'ease-in', fill: 'forwards' }).finished; fx.remove(); beam.remove(); await wait(450);
+}
 async function nameSubmit() {
-  if (S.posting) return; const name = cleanName($('nameIn').value).trim(); const msg = $('nameMsg');
+  if (S.posting) return; const name = cleanName(S.nameBuf).trim(); const msg = $('nameMsg');
   if (!validName(name)) { msg.textContent = name ? 'The diner won\'t write that one. Try another.' : 'Sign your name, witness.'; vib(40); return; }
-  localStorage.setItem('cr9_name', name); S.posting = true; msg.textContent = 'Pinning it to the wall…';
+  localStorage.setItem('cr9_name', name); S.posting = true; msg.textContent = 'Pinning it to the wall…'; $('keypad').classList.add('away');
   const run = { name, score: S.score, souls: S.souls, kills: S.kills, bestStreak: S.bestStreak, cowPts: S.cowPts, cowHits: S.cowHits, pointBlanks: S.pointBlanks, firstKill: S.firstKill, abducted: !!S.abducted, dur: +runDur().toFixed(1), v: BUILD_V }; if (S.restored) run.restored = true; // p4h: the run was continued after a reload
-  const res = await postScore(run); S.posting = false; S.boardRes = res; S.postDur = run.dur;
-  if (!res.ok && /name/.test(res.error || '')) { msg.textContent = 'The diner won\'t write that one. Try another.'; return; }
-  clearInterval(S.nameIv); hide('nameScreen'); try { $('nameIn').blur(); } catch (e) {} S.nameDone = true; showEnd();
-  if (res.ok && res.rank <= 10) { // REX: making the board = the high-score sting (G major)
-    S.boardSting = true; if (A.buf[SND.boardSting]) play(SND.boardSting, { gain: 0.8 }); else { killChord(); play('ANIMAL_Cow_Moo_01', { gain: 0.8 }); } /* killChord = the GTR_Kill_Chord sample */ confetti(0, 300, 60); vib([60, 40, 120]); }
+  const res = await postScore(run); S.boardRes = res; S.postDur = run.dur;
+  if (!res.ok && /name/.test(res.error || '')) { S.posting = false; $('keypad').classList.remove('away'); msg.textContent = 'The diner won\'t write that one. Try another.'; return; }
+  clearInterval(S.nameIv); S.nameFetch++; const made = res.ok && res.rank <= 10; msg.textContent = '';
+  if (made) { try { await dropAnim(res, name); } catch (e) { console.warn('dropAnim', e); } } // REX: making the board = the high-score sting (G major), played as the name drops in
+  S.posting = false; hide('nameScreen'); S.nameDone = true; showEnd();
+  if (made) { confetti(0, 300, 60); vib([60, 40, 120]); }
 }
 async function fillBoard(el, myRes) {
   el.innerHTML = '<div class="sheet loading">Reading the sign-in sheet…</div>';
@@ -1148,10 +1200,11 @@ document.addEventListener('keyup', (e) => { KEYS.delete(keyOf(e)); KEYS.delete(e
 addEventListener('blur', () => { KEYS.clear(); if (S.hold && S.pid === 'kb') beamUp(); });
 $('signBtn').addEventListener('pointerdown', (e) => { e.stopPropagation(); e.preventDefault(); hide('endCard'); showNameEntry(); }); // abducted runs: sign the sheet from the MISSING TIME card
 $('shredBtn').addEventListener('pointerdown', (e) => { e.stopPropagation(); e.preventDefault(); startHyper(); });
-$('nameGo').addEventListener('pointerdown', (e) => { e.stopPropagation(); e.preventDefault(); nameSubmit(); });
 $('nameSkip').addEventListener('pointerdown', (e) => { e.stopPropagation(); e.preventDefault(); nameSkip(); });
-$('nameIn').addEventListener('input', (e) => { const v = cleanName(e.target.value); if (v !== e.target.value) e.target.value = v; });
-$('nameIn').addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); nameSubmit(); } });
+document.addEventListener('keydown', (e) => { // v4.9: a physical keyboard types straight into the pending row
+  if (S.state !== 'name' || !vis('nameScreen') || e.ctrlKey || e.metaKey || e.altKey) return; const k = e.key; let h = true;
+  if (k === 'Enter') nameKey('GO'); else if (k === 'Backspace') nameKey('DEL'); else if (k.length === 1 && /[a-z0-9 ]/i.test(k)) nameKey(k.toUpperCase()); else h = false;
+  if (h) { e.preventDefault(); e.stopImmediatePropagation(); } }, true);
 $('endCard').addEventListener('pointerdown', () => { if (S.state === 'end' && S.missSkippable) skipMiss(); }); // pass 3: a tap on the card skips the giggle lock (later losses only)
 ['nameScreen', 'endCard', 'boardScreen'].forEach((id) => $(id).addEventListener('pointerdown', (e) => e.stopPropagation()));
 $('hiBtn').addEventListener('pointerup', openTitleBoard);
