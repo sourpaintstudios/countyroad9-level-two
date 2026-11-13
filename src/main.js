@@ -8,7 +8,7 @@ import { AT, buildAtmos, swayMat, updateAtmos } from './atmos.js';
 import BEATS from './beats.json';
 import COWS from './cows_meta.json';
 import VO from './vo.json'; // v4.5 IKE's CB narration slots + captions
-import { fetchBoard, postScore, renderBoard, renderEntryBoard, rowHtml, rivalLine, cleanName, validName, NAME_MAX, scoreOf, round2, canPost, SCORE, multOf } from './board.js';
+import { fetchBoard, fetchAll, renderFull, postScore, renderBoard, renderEntryBoard, rowHtml, rivalLine, cleanName, validName, NAME_MAX, scoreOf, round2, canPost, SCORE, multOf } from './board.js';
 import { L2, initL2, cutscene, enterShip, endCard, fleeSfx, leaveShip } from './l2.js';
 import PKG from '../package.json'; // v4.5.2: the build version baked into the bundle (version.json is written from the same file)
 import MAN from './manifest.json'; // v4.5: the ONE cow sheet (built by tools/make_cow_sheet.py from src/cows.json)
@@ -74,7 +74,7 @@ async function versionCheck() { if (verBusy || Q.get('nover')) return; verBusy =
   try { const r = await fetch(`${import.meta.env.BASE_URL}version.json?t=${Date.now()}`, { cache: 'no-store' }); if (r.ok) { const j = await r.json(); if (j && j.v && j.v !== BUILD_V) { console.warn('stale build', BUILD_V, '->', j.v); STALE = j.v; } } } catch (e) {} finally { verBusy = false; } }
 versionCheck(); document.addEventListener('visibilitychange', () => { if (!document.hidden) versionCheck(); }); window.addEventListener('pageshow', (e) => { if (e.persisted) versionCheck(); });
 const S = { state: 'boot', steer: 0, steerT: 0, souls: 0, bi: 0, laughs: 0, hold: false, finger: null, aimW: [0, 300], par: 0 };
-window.__cr9 = { S, A, Song, G, BT, showNameEntry };
+window.__cr9 = { S, A, Song, G, BT, showNameEntry, showEnd, openFull, L2 };
 
 // ---------- scene ----------
 const renderer = initRenderer($('gl'), Q.get('q'));
@@ -845,7 +845,7 @@ function finaleUpdate(dt) {
   if (t > 2.2 && !S.rankShown) { S.rankShown = true; hideCmd(); sub(''); $('rankTitle').textContent = S.rank; $('rankScore').textContent = `${S.souls} soul${S.souls === 1 ? '' : 's'} · ${S.score.toLocaleString()} pts`; show('rank'); play('FIGHT_Saved_Sting_Soft', { gain: 0.39 }); flash(0.4, 300); vib(60); }
   if (t > 3.8 && S.newBest && !S.bestShown) { S.bestShown = true; show('newBest'); flash(0.7, 400); G.shake = 0.6; play('GTR_Beat_Bonus_02_Soft', { gain: 0.45 }); play('FIGHT_Crowd_Cheer_Soft', { gain: 0.48 }); confetti(0, 300, 90); S.hero.bang = 1; vib([60, 40, 60, 40, 120]); }
   if (t > WIN_LINE[0] && !S.winDuck) { S.winDuck = true; sfxDuck(true); if (A.songEl && A.songEl.paused && A.buf.VO_Ohno_SingThat) { play('VO_Ohno_SingThat', { gain: 0.95, bus: 'music' }); S.ohnoLineClip = (S.ohnoLineClip || 0) + 1; } } if (t > WIN_LINE[1] && S.winDuck === true) { S.winDuck = 2; sfxDuck(false); }
-  if (t > NAME_AT && !S.nameDone) { if (canPost(S) && !Q.get('noboard')) showNameEntry(); else { S.nameDone = true; showEnd(); } } // v4.4: the arcade name screen right after the rank card
+  if (t > NAME_AT && !S.nameDone) { S.nameDone = true; showEnd(); } // v4.10: Level One never asks for a name any more; it goes straight on to the abduction clip + Level Two. The name screen comes once, at the very end of Level Two.
   if (S.souls >= TOTAL_GRAYS && t > 2.6 && !S.perfectVo) { S.perfectVo = true; sayBank('PERFECT_RUN'); }
 }
 function drawCow(cv, k) { const f = CF[k], img = G.tex.cows && G.tex.cows.image; if (!f || !img || !cv.getContext) return; const g = cv.getContext('2d');
@@ -876,7 +876,7 @@ function skipMiss() { if (NOW() < (S.missSkipAt || 0)) { S.missEarlyTaps = (S.mi
 function stopGiggle() { clearTimeout(S.giggleT0); if (S.giggleH) { S.giggleH.stop(0, 0.05); S.giggleH = null; } S.giggleUntil = 0; } // pass-2 review: call from Chico's tap-to-skip (pass 3); ~50 ms fade via play().stop
 function drawMissGray() { const cv = $('missGray'); if (!cv) return; cv.classList.toggle('hidden', !S.abducted); let im = G.tex.faces && G.tex.faces.image; if (G.tex.faces && G.tex.faces.etc2) { im = S.missImg; if (!im) { im = S.missImg = new Image(); im.onload = () => { S.missGrayDrawn = 0; drawMissGray(); }; im.src = G.tex.faces.webp; return; } if (!im.complete) return; } if (!S.abducted || !im) return; // p4b: ETC2 atlas has no CPU image -> fetch the webp (cached) for this card // p3b: the MISSING TIME card shows Daniel's full dripping portrait (atlas cell 31)
   const x = cv.getContext('2d'), c = 320; x.clearRect(0, 0, c, c); x.drawImage(im, (GF.drip % 6) * c, Math.floor(GF.drip / 6) * c, c, c, 0, 0, c, c); S.missGrayDrawn = (S.missGrayDrawn || 0) + 1; }
-function showEnd() { if (!L2.on && !S.abducted && !S.l2Done) { S.l2Done = true; S.state = 'missing'; S.fight = null; S.hold = false; beamSound(false); cueSet(0, false); hideAim(); hideCmd(); sub(''); hide('nameScreen'); hide('rank'); GR.forEach((g) => (g.face.visible = false)); drawShips(0); stopAll(); clearPops(); bannerClear(); cutscene(() => { clearPops(); bannerClear(); enterShip(); startRun(RUN_MODE === 'parade' ? undefined : RUN_MODE); }); return; } /* fix: a Level One WIN also goes to the abduction clip + Level Two */ if (L2.on && !S.abducted) { S.state = 'end'; endCard(() => goTitle(true), (S.score || scoreOf(S) || 0), () => { goTitle(true); startRun(RUN_MODE); }); return; } if (L2.on) leaveShip(); S.l2Done = false;
+function showEnd() { if (!L2.on && !S.abducted && !S.l2Done) { S.l2Done = true; S.state = 'missing'; S.fight = null; S.hold = false; beamSound(false); cueSet(0, false); hideAim(); hideCmd(); sub(''); hide('nameScreen'); hide('rank'); GR.forEach((g) => (g.face.visible = false)); drawShips(0); stopAll(); clearPops(); bannerClear(); cutscene(() => { clearPops(); bannerClear(); enterShip(); startRun(RUN_MODE === 'parade' ? undefined : RUN_MODE); }); return; } /* fix: a Level One WIN also goes to the abduction clip + Level Two */ if (L2.on && !S.abducted) { if (!S.nameDone && canPost(S) && !Q.get('noboard')) { showNameEntry(); return; } /* v4.10: the one high-score entry, at the end of Level Two; submit/skip comes back here with nameDone set */ S.state = 'end'; endCard(() => goTitle(true), (S.score || scoreOf(S) || 0), () => { goTitle(true); startRun(RUN_MODE); }); const sb = $('l2sheet'); if (sb) { sb.classList.toggle('hidden', !S.boardRes); sb.onpointerup = async (ev) => { ev.stopPropagation(); show('boardScreen'); await fillBoard($('titleBoard'), S.boardRes); }; } return; } if (L2.on) leaveShip(); S.l2Done = false;
   S.state = 'end'; hideCmd(); sub(''); hide('rank'); engineLevel(ENGINE_LVL * 0.3, 1); S.beds.hoof && S.beds.hoof.stop(0, 0.6);
   $('endTitle').innerHTML = S.abducted ? "OOPS! YOU'VE BEEN ABDUCTED<small class='soon'>COMING SOON: LEVEL 2</small>" : `${S.souls} soul${S.souls === 1 ? '' : 's'} saved<br>on County Road 9`; $('endCard').classList.toggle('missing', !!S.abducted); drawMissGray();
   $('endMiss').innerHTML = S.abducted ? `They found the truck on County Road 9 at dawn, engine still warm.<br>Daniel can't account for the last three hours.<b>${S.souls} soul${S.souls === 1 ? '' : 's'} saved · ${(S.score || 0).toLocaleString()} pts</b>` : ''; $('endMiss').classList.toggle('hidden', !S.abducted);
@@ -1129,6 +1129,22 @@ async function nameSubmit() {
   S.posting = false; hide('nameScreen'); S.nameDone = true; showEnd();
   if (made) { confetti(0, 300, 60); vib([60, 40, 120]); }
 }
+const FULLN = 100; let FULL = null;
+async function openFull(myId, rank) {
+  show('fullScreen'); $('fullBoard').innerHTML = '<div class="sheet loading">Reading the whole wall…</div>'; $('fullMoreBtn').classList.add('hidden');
+  const start = rank > 0 ? Math.max(0, Math.floor((rank - 1) / FULLN) * FULLN) : 0, d = await fetchAll(start, FULLN);
+  if (!d) { $('fullBoard').innerHTML = '<div class="sheet loading">The wall is offline. Try again in a bit.</div>'; return; }
+  FULL = { rows: d.rows, start: d.offset, total: d.total, myId }; paintFull(true);
+}
+function paintFull(scrollMe) {
+  const f = FULL; renderFull($('fullBoard'), f.rows, f.myId, f.start > 0); $('fullMoreBtn').classList.toggle('hidden', f.start + f.rows.length >= f.total);
+  const me = f.myId && $('fullBoard').querySelector('li.me'); if (scrollMe && me && me.scrollIntoView) me.scrollIntoView({ block: 'center' });
+  const e = $('fullEarlier'); if (e) e.onpointerup = async (ev) => { ev.stopPropagation(); const st = Math.max(0, f.start - FULLN), d = await fetchAll(st, f.start - st); if (d) { f.rows = d.rows.concat(f.rows); f.start = d.offset; paintFull(false); } };
+}
+$('fullMoreBtn').addEventListener('pointerup', async (ev) => { ev.stopPropagation(); const f = FULL; if (!f) return; const d = await fetchAll(f.start + f.rows.length, FULLN); if (d) { f.rows = f.rows.concat(d.rows); f.total = d.total; paintFull(false); } });
+$('fullClose').addEventListener('pointerup', (e) => { e.stopPropagation(); hide('fullScreen'); });
+['fullScreen'].forEach((id) => $(id).addEventListener('pointerdown', (e) => e.stopPropagation()));
+document.addEventListener('pointerup', (e) => { const b = e.target.closest && e.target.closest('#fullBtn'); if (b) { e.stopPropagation(); openFull(b.dataset.id || null, +b.dataset.rank || 0); } }, true);
 async function fillBoard(el, myRes) {
   el.innerHTML = '<div class="sheet loading">Reading the sign-in sheet…</div>';
   const data = myRes && myRes.ok ? myRes : await fetchBoard(); S.boardShown = data ? (data.top || []).length : -1;
@@ -1140,7 +1156,7 @@ async function openTitleBoard(e) { e.stopPropagation(); e.preventDefault(); show
 document.addEventListener('pointerdown', (e) => {
   if (S.paused) return; // p4g: the pause menu owns every touch
   if ((S.state === 'end' || S.state === 'missing') && S.missSkippable) { skipMiss(); return; } // pass 3: later losses, a tap skips the ~2.9 s giggle lock
-  if (S.state === 'parade' && S.paradeT > NAME_AT && !S.nameDone) { if (canPost(S) && !Q.get('noboard')) return showNameEntry(); S.nameDone = true; return showEnd(); }
+  if (S.state === 'parade' && S.paradeT > NAME_AT && !S.nameDone) { S.nameDone = true; return showEnd(); } // v4.10: no name screen after Level One
   if (S.grab) { e.preventDefault(); return grabTap(); }
   if (S.state !== 'run' || !S.fight) return;
   const touch = e.pointerType !== 'mouse'; if (S.hold && !(touch && S.latch)) return;

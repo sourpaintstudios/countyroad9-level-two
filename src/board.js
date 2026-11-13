@@ -12,6 +12,10 @@ export async function fetchBoard(timeoutMs = 6000) {
   const c = new AbortController(), t = setTimeout(() => c.abort(), timeoutMs);
   try { const r = await fetch(API, { signal: c.signal }); const j = await r.json(); return j && j.ok ? j : null; } catch (e) { return null; } finally { clearTimeout(t); }
 }
+export async function fetchAll(offset = 0, limit = 100, timeoutMs = 7000) { // the master list, one page of it
+  const c = new AbortController(), t = setTimeout(() => c.abort(), timeoutMs);
+  try { const r = await fetch(`${API}?all=1&offset=${offset}&limit=${limit}`, { signal: c.signal }); const j = await r.json(); return j && j.ok ? j : null; } catch (e) { return null; } finally { clearTimeout(t); }
+}
 export async function postScore(run, timeoutMs = 8000) {
   const c = new AbortController(), t = setTimeout(() => c.abort(), timeoutMs);
   try { const r = await fetch(API, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(run), signal: c.signal }); const j = await r.json().catch(() => null); return j || { ok: false, error: `HTTP ${r.status}` }; }
@@ -24,7 +28,9 @@ export function renderBoard(el, data, rankFor, myId, localBest) {
   if (!data) h += `<li class="off">The sheet blew off the wall. (Board offline)<br><small>Your best on this phone: ${(localBest || 0).toLocaleString()} pts</small></li>`;
   else if (!rows.length) h += `<li class="off">Nobody's signed it yet. Be the first witness.</li>`;
   rows.forEach((e, i) => { h += `<li class="${e.id === myId ? 'me' : ''}"><b class="rk">${i + 1}.</b><span class="nm">${esc(e.name)}${e.abducted ? SAUCER : ''}</span><span class="sc">${e.score.toLocaleString()}</span><span class="tt">${esc(rankFor(e.souls))} · ${e.souls} soul${e.souls === 1 ? '' : 's'}</span>${e.ts ? `<span class="dt">abducted on this day · ${new Date(e.ts).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>` : ''}${i === 0 ? '<em class="believe">The diner believes YOU.</em>' : ''}</li>`; });
-  h += `<li class="gray">${STINK}<span class="nm">GRAY</span><span class="sc">0</span><span class="tt">0 souls · never was one</span></li></ol></div>`; // IKE: the fake GRAY always sits at the bottom (client-side only, never stored)
+  h += `<li class="gray">${STINK}<span class="nm">GRAY</span><span class="sc">0</span><span class="tt">0 souls · never was one</span></li></ol>`; // IKE
+  if (data && myId && data.rank > rows.length) h += `<div class="yourRank">YOU: #${data.rank.toLocaleString()} of ${data.total.toLocaleString()}</div>`;
+  h += `</div>`; if (data && (data.total || 0) > rows.length) h += `<button class="fullBtn" id="fullBtn" data-id="${esc(myId || '')}" data-rank="${data.rank || 0}">FULL LIST (${data.total.toLocaleString()})</button>`; // the top 10 is the board; everyone else is one tap away: the fake GRAY always sits at the bottom (client-side only, never stored)
   el.innerHTML = h;
 }
 export function rivalLine(res, score) { // Chico: compare against the entry just below (beat) or just above (behind)
@@ -47,3 +53,10 @@ export function renderEntryBoard(el, rows, score, souls, rankFor) {
 }
 function pendingRow(rk, score) { return `<li class="me pend" id="pendRow"><b class="rk">${rk}.</b><span class="nm"><span id="pendName"></span><i class="cur"></i></span><span class="sc">${score.toLocaleString()}</span></li>`; }
 export const rowHtml = (e, i) => `<li data-id="${esc(e.id)}"><b class="rk">${i + 1}.</b><span class="nm">${esc(e.name)}${e.abducted ? SAUCER : ''}</span><span class="sc">${e.score.toLocaleString()}</span></li>`;
+
+// the master list: every entry, paged. rows: this page of {rank,name,score,souls,abducted}; myId highlights you.
+export function renderFull(el, rows, myId, hasEarlier) {
+  let h = `<div class="sheet full"><i class="pin"></i><div class="sheetHd">ALL THE WITNESSES</div><div class="sheetSub">Everybody who signed in.</div>${hasEarlier ? '<button class="fullMore" id="fullEarlier">&uarr; EARLIER</button>' : ''}<ol class="wit">`;
+  for (const e of rows) h += `<li data-id="${esc(e.id)}" class="${e.id === myId ? 'me' : ''}"><b class="rk">${e.rank}.</b><span class="nm">${esc(e.name)}${e.abducted ? SAUCER : ''}</span><span class="sc">${e.score.toLocaleString()}</span></li>`;
+  el.innerHTML = h + '</ol></div>';
+}

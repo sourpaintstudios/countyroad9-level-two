@@ -19,8 +19,9 @@ async function all() { const out = []; let cursor;
   return out.sort((a, b) => b.score - a.score || a.ts - b.ts); }
 const pub = ({ id, name, score, souls, abducted, ts }, i) => ({ rank: i + 1, id, name, score, souls, abducted, ts });
 const mem = new Map(); // fast per-instance rate limit; the authoritative check is the iphash in recent pathnames (works across instances)
-export async function GET() {
-  try { const s = await all(); return json({ ok: true, top: s.slice(0, TOP).map(pub), total: s.length }, 200, 'public, max-age=0, s-maxage=15'); }
+export async function GET(req) {
+  try { const s = await all(); const q = new URL(req.url).searchParams; if (q.get('all')) { const off = Math.max(0, parseInt(q.get('offset')) || 0), lim = Math.min(100, Math.max(1, parseInt(q.get('limit')) || 100)); return json({ ok: true, rows: s.slice(off, off + lim).map((e, k) => pub(e, off + k)), offset: off, total: s.length }, 200, 'public, max-age=0, s-maxage=10'); } // full master list, paged (the board itself still shows only the top 10)
+    return json({ ok: true, top: s.slice(0, TOP).map(pub), total: s.length }, 200, 'public, max-age=0, s-maxage=15'); }
   catch (e) { return json({ ok: false, error: 'board unavailable' }, 503); }
 }
 export async function POST(req) {

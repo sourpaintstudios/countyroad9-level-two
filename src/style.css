@@ -196,7 +196,7 @@ body.hyperOn #cmd { color: #fff35a; }
 .wit .stink { width: 24px; height: 24px; align-self: center; }
 .wit li.off { display: block; font: italic 15px Georgia, serif; color: #5a4a6a; }
 #hiBtn { margin-top: 18px; font: 900 20px "Arial Black", sans-serif; padding: 12px 26px; border-radius: 40px; border: 3px solid #ffd27a; background: #3a1a00cc; color: #ffd27a; box-shadow: 0 0 16px #ff9a2e88; touch-action: manipulation; }
-#boardScreen { background: #05060dee; overflow-y: auto; touch-action: pan-y; padding: 5vh 4vw 30px; justify-content: flex-start; }
+#boardScreen { z-index: 60; background: #05060dee; overflow-y: auto; touch-action: pan-y; padding: 5vh 4vw 30px; justify-content: flex-start; }
 #boardClose { margin-top: 16px; font: 900 22px "Arial Black", sans-serif; padding: 12px 40px; border-radius: 40px; border: 3px solid var(--neon); background: #2a5a00; color: #fff; }
 #cleanBtn { margin-top: 10px; font: 800 13px system-ui, sans-serif; padding: 8px 16px; border-radius: 20px; border: 2px solid #9a93b8; background: #1a0a3acc; color: #c9b8ff; touch-action: manipulation; }
 
@@ -383,3 +383,15 @@ body.l2 #gl{filter:brightness(1.35) saturate(.45) contrast(.95)}
 #l2cut.hidden,#l2end.hidden,#l2ship.hidden{display:none}
 #l2ship{mix-blend-mode:normal;opacity:.9;background:radial-gradient(ellipse at 50% 40%,rgba(255,255,255,.05) 30%,rgba(235,245,255,.55) 80%)}
 #l2ship .stars{opacity:.22;mix-blend-mode:screen}
+
+/* v4.10 master list: top 10 on the board, everyone else behind FULL LIST */
+.fullBtn { display: block; margin: 14px auto 0; font: 900 16px "Arial Black", sans-serif; letter-spacing: .08em; padding: 10px 26px; border-radius: 30px; border: 3px solid var(--neon); background: #0b1a00; color: #fff; }
+.yourRank { margin-top: 8px; text-align: center; font: 900 15px "Arial Black", sans-serif; letter-spacing: .06em; color: #b1221b; }
+#fullScreen { background: #05060df2; z-index: 70; overflow-y: auto; touch-action: pan-y; padding: 5vh 4vw 30px; justify-content: flex-start; }
+#fullScreen .sheet.full { max-width: 440px; width: 100%; }
+#fullScreen .wit li { display: grid; grid-template-columns: 44px 1fr auto; height: 28px; min-height: 28px; align-items: center; }
+#fullScreen .wit li.me { background: #fff35a66; border-radius: 6px; outline: 2px solid #b1221b; }
+.fullMore { margin: 8px auto; font: 900 14px "Arial Black", sans-serif; padding: 8px 22px; border-radius: 24px; border: 2px solid var(--neon); background: #0b1a00; color: #fff; display: block; }
+#fullClose { margin-top: 16px; font: 900 22px "Arial Black", sans-serif; padding: 12px 40px; border-radius: 40px; border: 3px solid var(--neon); background: #2a5a00; color: #fff; }
+
+#l2sheet.hidden{display:none}
