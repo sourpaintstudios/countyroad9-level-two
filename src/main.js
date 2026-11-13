@@ -1073,7 +1073,7 @@ function nameKey(k) {
   $('nameMsg').textContent = ''; drawPend(true);
 }
 function drawPend(flash) { const p = $('pendName'); if (!p) return; p.textContent = S.nameBuf; if (flash) { p.classList.remove('typed'); void p.offsetWidth; p.classList.add('typed'); } }
-function paintEntry() { renderEntryBoard($('nameBoard'), S.nameRows, S.score, S.souls, rankFor); drawPend(false); const r = $('pendRow'); if (r && r.scrollIntoView) r.scrollIntoView({ block: 'nearest' }); }
+function paintEntry() { renderEntryBoard($('nameBoard'), S.nameRows, S.score, S.souls, rankFor); drawPend(false); const r = $('pendRow'), nb = $('nameBoard'); if (r && nb) { const rb = r.getBoundingClientRect(), bb = nb.getBoundingClientRect(); nb.scrollTop += (rb.top + rb.height / 2) - (bb.top + bb.height / 2); } } // keep the name row centred in the sheet's window
 function showNameEntry() {
   S.state = 'name'; hide('rank'); S.posting = false; S.nameBuf = cleanName(localStorage.getItem('cr9_name') || '').trim().slice(0, NAME_MAX); S.nameRows = null; $('nameMsg').textContent = ''; $('nameScore').textContent = `${S.score.toLocaleString()} pts · ${S.souls} soul${S.souls === 1 ? '' : 's'}`;
   buildKeypad(); $('keypad').classList.remove('away'); S.nameFetch = (S.nameFetch || 0) + 1; const my = S.nameFetch; $('nameBoard').innerHTML = '<div class="sheet loading">Reading the sign-in sheet…</div>';
