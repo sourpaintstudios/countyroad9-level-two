@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<title>County Road 9 - Level Two Throw Test</title>
+<style>
+html,body{margin:0;height:100%;background:#000;overflow:hidden;touch-action:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;color:#fff}
+#stage{position:fixed;inset:0;z-index:1}#stage canvas{display:block}
+#hud{position:fixed;left:0;top:0;z-index:7;pointer-events:none}
+#ui{position:fixed;inset:0;z-index:8;pointer-events:none}
+.top{position:absolute;left:0;right:0;top:0;padding:calc(env(safe-area-inset-top,0px) + 30px) 14px 0;display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
+#lives{font-size:20px;letter-spacing:4px;color:#ff5a7a;text-shadow:0 0 8px #000}
+#chicks{font-size:12px;font-weight:800;letter-spacing:.12em;color:#ffd24a;text-shadow:0 0 6px #000;margin-top:2px}
+#bar{width:min(46vw,220px);height:12px;border-radius:7px;background:rgba(0,0,0,.55);border:1px solid rgba(255,255,255,.35);overflow:hidden}
+#barFill{height:100%;width:0;background:linear-gradient(90deg,#00d4ff,#ff3fd0,#ffd24a);transition:width .25s}
+#barL{font-size:10px;letter-spacing:.2em;text-align:center;margin-bottom:3px;text-shadow:0 0 6px #000;opacity:.85}
+.btn{pointer-events:auto;font:700 11px system-ui;letter-spacing:.12em;color:#fff;background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.4);border-radius:8px;padding:8px 10px}
+#score{position:absolute;right:14px;top:calc(env(safe-area-inset-top,0px) + 82px);font:900 16px system-ui;letter-spacing:.08em;color:#ffe14a;text-shadow:0 0 8px #000}
+#face{position:absolute;left:12px;top:calc(env(safe-area-inset-top,0px) + 82px);width:66px;height:66px;border-radius:50%;background:radial-gradient(circle at 50% 35%,#2a3550,#0a0d18);border:2px solid rgba(255,255,255,.5);box-shadow:0 0 14px rgba(0,0,0,.7);opacity:0;transition:opacity .25s}
+#face.hit{animation:fhit .45s ease-out}@keyframes fhit{0%{transform:scale(1.35) rotate(-8deg);border-color:#ff3fd0}30%{transform:scale(.92) rotate(5deg)}100%{transform:none}}
+#msg{position:absolute;left:0;right:0;top:20%;text-align:center;font:900 34px Impact,'Arial Black',system-ui;letter-spacing:.06em;color:#fff;text-shadow:0 0 14px #ff3fd0,0 3px 0 #000;opacity:0;transition:opacity .2s}
+#hint{position:absolute;left:0;right:0;bottom:calc(env(safe-area-inset-bottom,0px) + 232px);text-align:center;font:700 13px system-ui;letter-spacing:.1em;color:#fff;text-shadow:0 0 8px #000;opacity:0;transition:opacity .4s;line-height:1.7}
+.bub{position:absolute;left:0;top:0;background:#fff;color:#111;font:900 24px Impact,'Arial Black',system-ui;padding:6px 14px;border-radius:18px;border:3px solid #111;white-space:nowrap}
+.bub:after{content:"";position:absolute;left:50%;bottom:-14px;margin-left:-8px;border:8px solid transparent;border-top-color:#111;border-bottom:0}
+#ohno{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none;opacity:0}
+#ohno span{font:900 22vw Impact,Haettenschweiler,'Arial Black',system-ui;letter-spacing:.02em;color:#ffe14a;-webkit-text-stroke:3px #ff2d95;text-shadow:5px 5px 0 #00d4ff,-4px 4px 0 #7a2cff,0 0 40px #ff2d95;transform:rotate(-6deg)}
+#ohno.go{animation:ohno 1.1s ease-out}
+@keyframes ohno{0%{opacity:0;transform:scale(.2)}12%{opacity:1;transform:scale(1.25) rotate(3deg)}22%{transform:scale(.95) translate(-8px,6px)}32%{transform:scale(1.05) translate(8px,-6px)}42%{transform:scale(1) translate(-5px,3px)}75%{opacity:1}100%{opacity:0;transform:scale(1.15)}}
+#hurt{position:absolute;inset:0;background:radial-gradient(circle,rgba(255,0,40,0) 30%,rgba(255,0,40,.7));opacity:0;pointer-events:none}
+#hurt.go{animation:hurt .7s ease-out}@keyframes hurt{0%{opacity:1}100%{opacity:0}}
+#start,#over,#win{position:fixed;inset:0;z-index:20;background:rgba(2,3,10,.82);display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:24px}
+#over,#win{display:none}
+#start h1,#over h1,#win h1{font:900 30px Impact,'Arial Black',system-ui;letter-spacing:.08em;margin:0 0 6px;color:#ffe14a;text-shadow:0 0 18px #ff2d95}
+#start p{max-width:330px;font-size:14px;line-height:1.55;opacity:.9;margin:6px 0}
+.cta{font:900 18px system-ui;letter-spacing:.14em;color:#000;background:#ffe14a;border:0;border-radius:12px;padding:15px 34px;margin-top:18px}
+.cta:disabled{opacity:.5}
+#warn{position:fixed;left:0;right:0;top:0;z-index:30;padding:calc(env(safe-area-inset-top,0px) + 3px) 8px 3px;background:#ffe14a;color:#000;font:800 10px system-ui;letter-spacing:.12em;text-align:center;pointer-events:none}
+.ghost{background:transparent;color:#fff;border:2px solid rgba(255,255,255,.6);font-size:14px;padding:11px 26px;margin-top:12px}
+.small{font-size:11px;opacity:.6;margin-top:14px;max-width:300px}
+</style></head>
+<body>
+<div id="warn">PREVIEW &middot; LEVEL TWO UNFINISHED &middot; PLACEHOLDER ART &middot; NO MUSIC</div><div id="stage"></div><canvas id="hud"></canvas>
+<div id="ui">
+  <div class="top"><div><div id="lives"></div><div id="chicks"></div></div><div><div id="barL">PAINT ON HIM</div><div id="bar"><div id="barFill"></div></div></div><button class="btn" id="btnOhno">OH NO!</button></div>
+  <div id="score">0 PTS</div><canvas id="face" width="132" height="132"></canvas><div id="msg"></div><div id="hint">LEFT THUMB: WALK &middot; RIGHT: TOUCH YOUR FIGURE, HOLD TO LOAD<br>DRAG TO AIM &middot; LET GO TO THROW<br>strum side to side while loading to fill faster</div>
+  <div id="ohno"><span>OH NO!</span></div><div id="hurt"></div>
+</div>
+<div id="start"><h1>LEVEL TWO</h1><div style="letter-spacing:.3em;font-size:12px;opacity:.8">THE SHIP</div>
+<p>Left thumb walks you left, right, forward and back. Walk the corridor to the master control room. Grays come out of the side doors at you. Throw enough paint and each one turns into a chicken. Five chickens and the way is clear. Don't let them reach you.</p>
+<p class="small">Preview build: placeholder figure, still-image grays with a fake walk, drawn chicken, no song yet. Your points here count toward your high score.</p>
+<button class="cta" id="btnStart" disabled>LOADING...</button><button class="cta ghost" id="btnSkip" style="display:none">SKIP LEVEL TWO</button></div>
+<div id="win"><h1>MASTER CONTROL ROOM</h1><div style="letter-spacing:.3em;font-size:12px;opacity:.8">LEVEL TWO CLEAR</div><p id="winTxt" style="font-size:16px;font-weight:800;margin:14px 0 0"></p><button class="cta" id="btnDone" style="display:none">CONTINUE</button><button class="cta ghost" id="btnAgain">PLAY AGAIN</button></div>
+<div id="over"><h1>HE GOT YOU</h1><p id="overTxt" style="font-size:18px;font-weight:800"></p><button class="cta" id="btnRetry">TRY AGAIN</button><button class="cta ghost" id="btnEnd" style="display:none">END RUN &amp; SIGN THE SHEET</button></div>
+<script src="./fluid-smoke.js"></script>
+<script src="./faces.js"></script>
+<script type="importmap">{"imports":{"three":"./vendor/three/build/three.module.js","three/addons/":"./vendor/three/examples/jsm/"}}</script>
+<script type="module" src="./game.js"></script>
+</body></html>

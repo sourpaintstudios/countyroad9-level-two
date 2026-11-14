@@ -66,7 +66,8 @@ function partsOf(k, b) { const key = k * 16 + b; if (PART.has(key)) return PART.
   const out = new Set(); const rec = (left, max, sum, hit) => { if (!left) { if (hit) out.add(sum); return; } for (let L = Math.min(left, max); L >= 1; L--) rec(left - L, L, sum + runMult(L), hit || L === b); };
   rec(k, b, 0, false); const arr = [...out].sort((x, y) => x - y); PART.set(key, arr); return arr; }
 export const multSums = (k, b) => (b < 1 || b > k ? null : partsOf(k, b));
-export const scoreOf = (r) => r.kills * SCORE.KILL + r.cowPts - r.cowHits * SCORE.COW_HIT + r.pointBlanks * SCORE.PB + fkBonus(r.firstKill); // ONE formula: the game scores with this too
+export const L2_MAX = 3000; // v4.12: the paint-throw Level Two adds 0..3,000 in 100s (5 chickens x 100 + a melt of each x 100, all white = x3)
+export const scoreOf = (r) => r.kills * SCORE.KILL + r.cowPts - r.cowHits * SCORE.COW_HIT + r.pointBlanks * SCORE.PB + fkBonus(r.firstKill) + (Number.isInteger(r.l2pts) ? r.l2pts : 0); // ONE formula: the game scores with this too
 export const maxScore = (k) => k * SCORE.KILL + SCORE.SAVE * runMult(k) + k * SCORE.PB + (k ? fkBonus(FK_MIN) : 0); // 8 kills -> 56,285 (one 8-chain, every kill a point blank, first kill at the 4.3 s floor, no cow shot)
 export function checkRunV2(r) { // returns an error string, or null if the run is plausible
   const int = (v) => Number.isInteger(v);
@@ -82,8 +83,9 @@ export function checkRunV2(r) { // returns an error string, or null if the run i
   if (bestStreak < 1 || bestStreak > kills || pointBlanks < 0 || pointBlanks > kills || cowHits < 0 || cowHits > kills || cowPts < 0 || cowPts % SCORE.SAVE) return 'bad parts';
   const sums = multSums(kills, bestStreak); if (!sums || !sums.includes(cowPts / SCORE.SAVE)) return 'bad streak'; // the saved-cow points must add up for exactly this best streak (exact: every chain split of k kills is enumerated)
   if (kills > 0 ? !(typeof firstKill === 'number' && firstKill >= FK_MIN && firstKill <= MAX_DUR) : firstKill != null) return 'bad first kill';
+  if (r.l2pts != null && !(int(r.l2pts) && r.l2pts >= 0 && r.l2pts <= L2_MAX && r.l2pts % 100 === 0)) return 'bad level two';
   const want = scoreOf(r);
-  if (score !== want || score < 1 || score > maxScore(kills)) return 'bad score';
+  if (score !== want || score < 1 || score > maxScore(kills) + L2_MAX) return 'bad score';
   return null;
 }
 export const checkRun = (r) => (r && typeof r === 'object' && isV2(r.v) ? checkRunV2(r) : checkRunV1(r)); // dispatch on the build version the run was played on
