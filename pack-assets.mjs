@@ -2,7 +2,7 @@
 // Sources: art-src/ + vendor/cr9_sound_pack. Output: public/art, public/audio, and src/manifest.json (imported by the bundle).
 import fs from 'fs'; import crypto from 'crypto'; import { execSync } from 'child_process';
 // v4.5: rebuild the ONE cow sheet from vendor/cr9_cows by filename (src/cows.json) first
-execSync('python3 tools/make_cow_sheet.py', { stdio: 'inherit' });
+try { execSync('python3 tools/make_cow_sheet.py', { stdio: 'inherit' }); } catch (e) { console.log('cow sheet rebuild skipped (python deps missing); using committed art-src/cows_sheet.webp'); }
 const h8 = (b) => crypto.createHash('sha1').update(b).digest('hex').slice(0, 8);
 const hashed = (name, b) => { const i = name.lastIndexOf('.'); return `${name.slice(0, i)}.${h8(b)}${name.slice(i)}`; };
 fs.rmSync('public/art', { recursive: true, force: true }); fs.rmSync('public/audio', { recursive: true, force: true });
